@@ -1,0 +1,8 @@
+{
+  "name": "Public Service Rating System",
+  "description": "An application for citizens to rate public infrastructure like roads, government offices, parks, and more. Users can provide detailed feedback, upload photos, and help improve public services through transparent accountability.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}

@@ -28,7 +28,7 @@ const Header: React.FC = () => {
                 onClick={handleAdminLoginClick}
                 className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
              >
-                {t('header.adminLogin')}
+                {t('header.admin')}
              </button>
         </div>
       </div>

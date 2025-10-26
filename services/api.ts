@@ -192,11 +192,10 @@ export const submitRating = (submission: RatingSubmission): Promise<{ success: t
 
 // --- Admin Portal Mock API ---
 
-// Fix: Add the missing 'adminLogin' function to be consumed by the admin login page.
+// Fix: Add missing adminLogin function.
 export const adminLogin = (username: string, password: string): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         setTimeout(() => {
-            // Mock credentials. Password can be changed in settings.
             const storedPass = localStorage.getItem('adminPass') || 'password';
             if (username === 'admin' && password === storedPass) {
                 resolve({ success: true });

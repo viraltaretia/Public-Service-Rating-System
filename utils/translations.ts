@@ -2,7 +2,7 @@ const translations: { [key: string]: any } = {
   en: {
     header: {
       title: 'Public Service Rater',
-      adminLogin: 'Admin Login',
+      admin: 'Admin',
     },
     home: {
       findPlaces: 'Find Nearby Public Places',
@@ -56,7 +56,7 @@ const translations: { [key: string]: any } = {
   hi: {
     header: {
       title: 'लोक सेवा रेटर',
-      adminLogin: 'एडमिन लॉगिन',
+      admin: 'एडमिन',
     },
     home: {
       findPlaces: 'आस-पास के सार्वजनिक स्थान खोजें',

@@ -8,8 +8,6 @@ import AdminEntitiesPage from './components/admin/AdminEntitiesPage';
 import AdminEntityDetailPage from './components/admin/AdminEntityDetailPage';
 import AdminContractorsPage from './components/admin/AdminContractorsPage';
 import AdminSettingsPage from './components/admin/AdminSettingsPage';
-// Fix: Import the AdminLoginPage to use in the authentication flow.
-import AdminLoginPage from './components/admin/AdminLoginPage';
 
 import { useGeolocation } from './hooks/useGeolocation';
 import type { Entity } from './types';
@@ -19,8 +17,7 @@ import { LanguageProvider, LanguageContext } from './contexts/LanguageContext';
 const AppContent: React.FC = () => {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
-  // Fix: Add state to manage admin login status, persisted in session storage.
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(sessionStorage.getItem('isAdminLoggedIn') === 'true');
+  // Removed admin login state as authentication is being bypassed.
   const { location, error: locationError, loading: locationLoading } = useGeolocation();
   const { t } = useContext(LanguageContext);
 
@@ -53,10 +50,8 @@ const AppContent: React.FC = () => {
     setSelectedEntity(null);
   };
 
-  // Fix: Update logout handler to clear authentication state.
+  // The logout handler now simply navigates back to the homepage.
   const handleAdminLogout = () => {
-    setIsAdminLoggedIn(false);
-    sessionStorage.removeItem('isAdminLoggedIn');
     window.history.pushState({}, '', '/');
     setCurrentPath('/');
   };
@@ -84,14 +79,8 @@ const AppContent: React.FC = () => {
   };
 
   const renderContent = () => {
-     // Fix: Protect the admin route with a login check.
+     // Removed the login check to allow direct access to the admin panel.
      if (currentPath.startsWith('/admin')) {
-        if (!isAdminLoggedIn) {
-          return <AdminLoginPage onLoginSuccess={() => {
-            setIsAdminLoggedIn(true);
-            sessionStorage.setItem('isAdminLoggedIn', 'true');
-          }} />;
-        }
         return (
           <AdminLayout onLogout={handleAdminLogout}>
             {renderAdminContent()}

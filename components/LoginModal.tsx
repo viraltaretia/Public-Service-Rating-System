@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import Spinner from './Spinner';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface VerificationModalProps {
   onClose: () => void;
@@ -12,11 +13,12 @@ const LoginModal: React.FC<VerificationModalProps> = ({ onClose, onVerified }) =
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { t } = useContext(LanguageContext);
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (phoneNumber.length < 10) {
-      setError('Please enter a valid 10-digit phone number.');
+      setError(t('loginModal.error.invalidPhone'));
       return;
     }
     setError('');
@@ -31,7 +33,7 @@ const LoginModal: React.FC<VerificationModalProps> = ({ onClose, onVerified }) =
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp !== '123456') { // Mock OTP
-      setError('Invalid OTP. Please try again.');
+      setError(t('loginModal.error.invalidOtp'));
       return;
     }
     setError('');
@@ -51,20 +53,20 @@ const LoginModal: React.FC<VerificationModalProps> = ({ onClose, onVerified }) =
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
         </button>
-        <h2 className="text-2xl font-bold text-center mb-2">Verify Submission</h2>
-        <p className="text-center text-gray-500 mb-6">A quick verification is required to submit your rating.</p>
+        <h2 className="text-2xl font-bold text-center mb-2">{t('loginModal.title')}</h2>
+        <p className="text-center text-gray-500 mb-6">{t('loginModal.subtitle')}</p>
         
         {step === 1 && (
           <form onSubmit={handleSendOtp}>
             <div className="mb-4">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">{t('loginModal.phoneLabel')}</label>
               <input
                 id="phone"
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                 maxLength={10}
-                placeholder="Enter 10-digit number"
+                placeholder={t('loginModal.phonePlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required
               />
@@ -75,23 +77,23 @@ const LoginModal: React.FC<VerificationModalProps> = ({ onClose, onVerified }) =
               disabled={isLoading}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 flex justify-center items-center"
             >
-              {isLoading ? <Spinner /> : 'Send OTP'}
+              {isLoading ? <Spinner /> : t('loginModal.sendOtpButton')}
             </button>
           </form>
         )}
 
         {step === 2 && (
           <form onSubmit={handleVerifyOtp}>
-            <p className="text-center text-sm text-gray-600 mb-4">An OTP has been sent to +91 {phoneNumber}. (Hint: Use 123456)</p>
+            <p className="text-center text-sm text-gray-600 mb-4">{t('loginModal.otpSentMessage', { phoneNumber })}</p>
             <div className="mb-4">
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">{t('loginModal.otpLabel')}</label>
               <input
                 id="otp"
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 maxLength={6}
-                placeholder="6-digit code"
+                placeholder={t('loginModal.otpPlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required
               />
@@ -102,7 +104,7 @@ const LoginModal: React.FC<VerificationModalProps> = ({ onClose, onVerified }) =
               disabled={isLoading}
               className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300 flex justify-center items-center"
             >
-              {isLoading ? <Spinner /> : 'Verify & Submit Rating'}
+              {isLoading ? <Spinner /> : t('loginModal.verifyButton')}
             </button>
           </form>
         )}

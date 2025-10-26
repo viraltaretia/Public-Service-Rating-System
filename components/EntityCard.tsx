@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import type { Entity } from '../types';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface EntityCardProps {
   entity: Entity;
@@ -7,6 +8,7 @@ interface EntityCardProps {
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({ entity, onSelect }) => {
+  const { t } = useContext(LanguageContext);
   const getRatingColor = (rating: number, source: 'public' | 'google') => {
     if(source === 'google') return 'bg-gray-100 text-gray-800';
     if (rating >= 4) return 'bg-green-100 text-green-800';
@@ -23,11 +25,11 @@ const EntityCard: React.FC<EntityCardProps> = ({ entity, onSelect }) => {
         <div className="flex justify-between items-start">
             <div className="flex flex-wrap gap-2">
                  <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getRatingColor(entity.averageRating, 'public')}`}>
-                    Public: {entity.averageRating.toFixed(1)}
+                    {t('card.publicRating')}: {entity.averageRating.toFixed(1)}
                  </span>
                  {entity.googleRating && (
                     <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getRatingColor(entity.googleRating, 'google')}`}>
-                        Google: {entity.googleRating.toFixed(1)}
+                        {t('card.googleRating')}: {entity.googleRating.toFixed(1)}
                     </span>
                  )}
             </div>
@@ -38,7 +40,7 @@ const EntityCard: React.FC<EntityCardProps> = ({ entity, onSelect }) => {
       </div>
       <div className="bg-gray-50 px-5 py-3 text-right">
         <span className="text-blue-600 font-semibold hover:text-blue-800">
-          View & Rate &rarr;
+          {t('card.viewAndRate')}
         </span>
       </div>
     </div>

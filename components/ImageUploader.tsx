@@ -1,5 +1,5 @@
-
-import React, { useRef } from 'react';
+import React, { useRef, useContext } from 'react';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface ImageUploaderProps {
   photos: string[];
@@ -8,6 +8,7 @@ interface ImageUploaderProps {
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ photos, setPhotos }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useContext(LanguageContext);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -60,7 +61,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ photos, setPhotos }) => {
         onClick={() => fileInputRef.current?.click()}
         className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-md transition-colors"
       >
-        Add Photo
+        {t('form.addPhoto')}
       </button>
     </div>
   );

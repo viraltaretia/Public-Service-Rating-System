@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import type { Entity, RatingSubmission } from '../types';
 import { RATING_PARAMETERS } from '../constants';
 import ImageUploader from './ImageUploader';
 import Spinner from './Spinner';
 import LoginModal from './LoginModal';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface RatingFormProps {
   entity: Entity;
@@ -20,6 +21,7 @@ const RatingForm: React.FC<RatingFormProps> = ({ entity, onSubmit }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerificationModalOpen, setVerificationModalOpen] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState<RatingSubmission | null>(null);
+  const { t } = useContext(LanguageContext);
 
   const handleRatingChange = (key: string, value: number) => {
     setRatings(prev => ({ ...prev, [key]: value }));
@@ -60,8 +62,8 @@ const RatingForm: React.FC<RatingFormProps> = ({ entity, onSubmit }) => {
   return (
     <>
       <form onSubmit={handleInitiateSubmission} className="space-y-6">
-        <h3 className="text-2xl font-bold text-center">Submit Your Rating</h3>
-        <p className="text-center text-gray-600 -mt-4">Your feedback is anonymous and helps improve public services.</p>
+        <h3 className="text-2xl font-bold text-center">{t('form.submitTitle')}</h3>
+        <p className="text-center text-gray-600 -mt-4">{t('form.submitSubtitle')}</p>
         <div className="space-y-4">
           {ratingParams.map(param => (
             <div key={param.key} className="bg-gray-50 p-4 rounded-lg">
@@ -86,19 +88,19 @@ const RatingForm: React.FC<RatingFormProps> = ({ entity, onSubmit }) => {
           ))}
         </div>
         <div>
-          <label htmlFor="comment" className="block text-md font-semibold text-gray-700 mb-1">Description & Comments</label>
+          <label htmlFor="comment" className="block text-md font-semibold text-gray-700 mb-1">{t('form.commentsLabel')}</label>
           <textarea
             id="comment"
             rows={4}
             value={comment}
             onChange={e => setComment(e.target.value)}
-            placeholder="Share more details about your experience..."
+            placeholder={t('form.commentsPlaceholder')}
             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-md font-semibold text-gray-700 mb-1">Upload Photos</label>
-          <p className="text-sm text-gray-500 mb-2">Attach photos as evidence (e.g., potholes, uncleanliness).</p>
+          <label className="block text-md font-semibold text-gray-700 mb-1">{t('form.photosLabel')}</label>
+          <p className="text-sm text-gray-500 mb-2">{t('form.photosSubtitle')}</p>
           <ImageUploader photos={photos} setPhotos={setPhotos} />
         </div>
         <button
@@ -106,7 +108,7 @@ const RatingForm: React.FC<RatingFormProps> = ({ entity, onSubmit }) => {
           disabled={isLoading}
           className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-md flex justify-center items-center disabled:bg-green-300"
         >
-          {isLoading ? <Spinner /> : 'Verify & Submit Rating'}
+          {isLoading ? <Spinner /> : t('form.submitButton')}
         </button>
       </form>
       {isVerificationModalOpen && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import DetailPage from './components/DetailPage';
@@ -12,12 +12,15 @@ import AdminSettingsPage from './components/admin/AdminSettingsPage';
 
 import { useGeolocation } from './hooks/useGeolocation';
 import type { Entity } from './types';
+import { LanguageProvider, LanguageContext } from './contexts/LanguageContext';
 
-const App: React.FC = () => {
+
+const AppContent: React.FC = () => {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const { location, error: locationError, loading: locationLoading } = useGeolocation();
+  const { t } = useContext(LanguageContext);
 
   useEffect(() => {
     const onLocationChange = () => {
@@ -136,5 +139,13 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => {
+    return (
+        <LanguageProvider>
+            <AppContent />
+        </LanguageProvider>
+    )
+}
 
 export default App;

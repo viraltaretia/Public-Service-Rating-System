@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import type { Entity, RatingSubmission } from '../types';
 import RatingForm from './RatingForm';
 import { submitRating } from '../services/api';
 import Alert from './Alert';
+import { LanguageContext } from '../contexts/LanguageContext';
 
 interface DetailPageProps {
   entity: Entity;
@@ -11,6 +12,7 @@ interface DetailPageProps {
 
 const DetailPage: React.FC<DetailPageProps> = ({ entity, onBack }) => {
     const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const { t } = useContext(LanguageContext);
 
     const handleRatingSubmit = async (submission: RatingSubmission) => {
         try {
@@ -37,7 +39,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ entity, onBack }) => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
-            Back
+            {t('detail.back')}
         </button>
         
         <div className="text-center pt-8">
@@ -48,14 +50,14 @@ const DetailPage: React.FC<DetailPageProps> = ({ entity, onBack }) => {
 
         <div className="flex justify-center items-center flex-wrap gap-x-6 gap-y-4 my-6">
             <div className="flex items-center space-x-2">
-                <span className="text-gray-600 font-semibold">Public Rating:</span>
+                <span className="text-gray-600 font-semibold">{t('detail.publicRating')}</span>
                 <div className={`px-3 py-1 text-white font-bold text-lg rounded-full ${getRatingColor(entity.averageRating)}`}>
                     {entity.averageRating.toFixed(1)}
                 </div>
             </div>
              {entity.googleRating && (
                 <div className="flex items-center space-x-2">
-                    <span className="text-gray-600 font-semibold">Google Rating:</span>
+                    <span className="text-gray-600 font-semibold">{t('detail.googleRating')}</span>
                     <div className={`px-3 py-1 bg-gray-600 text-white font-bold text-lg rounded-full`}>
                        {entity.googleRating.toFixed(1)}
                     </div>
@@ -65,9 +67,9 @@ const DetailPage: React.FC<DetailPageProps> = ({ entity, onBack }) => {
 
         <div className="mt-8 border-t pt-6">
             {submissionStatus === 'success' ? (
-                 <Alert type="success" message="Thank you! Your rating has been submitted successfully." />
+                 <Alert type="success" message={t('detail.submitSuccess')} />
             ) : submissionStatus === 'error' ? (
-                <Alert type="error" message="Something went wrong. Please try submitting your rating again." />
+                <Alert type="error" message={t('detail.submitError')} />
             ) : (
                 <RatingForm entity={entity} onSubmit={handleRatingSubmit} />
             )}

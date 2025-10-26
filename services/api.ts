@@ -51,34 +51,45 @@ const mapGoogleTypeToEntityType = (googleType: string): EntityType => {
     return EntityType.OTHER;
 };
 
-export const fetchNearbyEntities = async (userLocation: Location): Promise<Entity[]> => {
-  // Fallback to mock data if Google Maps API isn't available or fails
-  const useMockData = () => MOCK_ENTITIES.slice(0, 5);
+const EntityTypeToGoogleType: Partial<Record<EntityType, string[]>> = {
+    [EntityType.PARK]: ['park'],
+    [EntityType.GOVERNMENT_OFFICE]: ['local_government_office'],
+    [EntityType.METRO_STATION]: ['subway_station', 'transit_station'],
+    [EntityType.BUS_STATION]: ['bus_station'],
+    // Note: ROAD, LAKE, DUMP_YARD don't have direct mappings in Places API (New)
+};
+
+
+export const fetchNearbyEntities = async (
+    userLocation: Location,
+    type: EntityType | 'ALL' = 'ALL',
+    searchTerm: string = ''
+): Promise<Entity[]> => {
+  const useMockData = () => {
+    let results = MOCK_ENTITIES;
+    if (type !== 'ALL') {
+      results = results.filter(e => e.type === type);
+    }
+    if (searchTerm.trim() !== '') {
+      const lowercasedTerm = searchTerm.trim().toLowerCase();
+      results = results.filter(e =>
+        e.name.toLowerCase().includes(lowercasedTerm) ||
+        e.address.toLowerCase().includes(lowercasedTerm)
+      );
+    }
+    return results.slice(0, 10);
+  };
 
   if (!window.google || !window.google.maps || window.googleMapsAuthFailed) {
-      console.warn("Google Maps API failed or not available. Falling back to mock data.");
-      return useMockData();
+    console.warn("Google Maps API failed or not available. Falling back to mock data.");
+    return useMockData();
   }
-
-  try {
-      // Asynchronously load the Places library using the modern importLibrary function
-      const { Place } = await window.google.maps.importLibrary("places");
-      
-      // Construct the request for the new Place.searchNearby() method
-      const request = {
-          fields: ['id', 'displayName', 'types', 'location', 'formattedAddress', 'rating'],
-          locationRestriction: {
-              center: userLocation,
-              radius: 5000,
-          },
-          includedTypes: ['park', 'bus_station', 'subway_station', 'transit_station', 'local_government_office', 'tourist_attraction']
-      };
-
-      // Call the new API, which returns a promise with place results
-      const { places } = await Place.searchNearby(request);
-
-      if (places && places.length > 0) {
-          const entities: Entity[] = places.map(place => ({
+  
+  const processPlaces = (places: any[]): Entity[] => {
+      if (!places || places.length === 0) return [];
+      return places
+          .filter(place => place.id && place.displayName && place.location)
+          .map(place => ({
               id: place.id!,
               name: place.displayName!,
               type: place.types && place.types.length > 0 ? mapGoogleTypeToEntityType(place.types[0]) : EntityType.OTHER,
@@ -91,13 +102,59 @@ export const fetchNearbyEntities = async (userLocation: Location): Promise<Entit
               googleRating: place.rating,
               contractorId: `CTR-${Math.floor(Math.random() * 1000)}` // Keep mock contractorId
           }));
-          return entities;
+  };
+
+  try {
+      const { Place } = await window.google.maps.importLibrary("places");
+      let places: any[] = [];
+      
+      if (searchTerm.trim()) {
+          const googleType = type === 'ALL' ? undefined : (EntityTypeToGoogleType[type as EntityType] || [])[0];
+          const request: any = {
+              textQuery: searchTerm,
+              fields: ['id', 'displayName', 'types', 'location', 'formattedAddress', 'rating'],
+              locationBias: {
+                  center: userLocation,
+                  radius: 50000,
+              },
+          };
+          if (googleType) {
+              request.includedType = googleType;
+          }
+          const response = await Place.searchByText(request);
+          places = response.places;
       } else {
-          console.warn('Google Places API (New) search returned no results, falling back to mock data.');
-          return useMockData();
+          const includedTypes = type === 'ALL'
+              ? ['park', 'bus_station', 'subway_station', 'transit_station', 'local_government_office', 'tourist_attraction']
+              : EntityTypeToGoogleType[type as EntityType] || [];
+
+          if (includedTypes.length === 0 && type !== 'ALL') {
+              console.warn(`Entity type "${type}" has no direct Google Places API mapping. Falling back to mock data.`);
+              return useMockData();
+          }
+
+          const request = {
+              fields: ['id', 'displayName', 'types', 'location', 'formattedAddress', 'rating'],
+              locationRestriction: {
+                  center: userLocation,
+                  radius: 5000,
+              },
+              includedTypes: includedTypes,
+          };
+          const response = await Place.searchNearby(request);
+          places = response.places;
       }
+
+      const entities = processPlaces(places);
+      if (entities.length > 0) {
+        return entities;
+      } else {
+        console.warn('Google Places API search returned no results, falling back to mock data.');
+        return useMockData();
+      }
+
   } catch (error) {
-      console.error("An error occurred with the new Google Maps API, falling back to mock data.", error);
+      console.error("An error occurred with the Google Maps API, falling back to mock data.", error);
       return useMockData();
   }
 };

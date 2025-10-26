@@ -9,8 +9,13 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+// Re-written to avoid using JSX in the entry-point file, which can sometimes
+// cause issues with simple dev servers and MIME type detection.
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  React.createElement(
+    React.StrictMode,
+    null,
+    React.createElement(App, null)
+  )
 );

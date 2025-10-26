@@ -1,21 +1,21 @@
+
 import React, { useState, useEffect, useContext } from 'react';
-import Header from './components/Header';
-import HomePage from './components/HomePage';
-import DetailPage from './components/DetailPage';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboardPage from './components/admin/AdminDashboardPage';
-import AdminEntitiesPage from './components/admin/AdminEntitiesPage';
-import AdminEntityDetailPage from './components/admin/AdminEntityDetailPage';
-import AdminContractorsPage from './components/admin/AdminContractorsPage';
-import AdminSettingsPage from './components/admin/AdminSettingsPage';
+import Header from './components/Header.tsx';
+import HomePage from './components/HomePage.tsx';
+import DetailPage from './components/DetailPage.tsx';
+import AdminLayout from './components/admin/AdminLayout.tsx';
+import AdminDashboardPage from './components/admin/AdminDashboardPage.tsx';
+import AdminEntitiesPage from './components/admin/AdminEntitiesPage.tsx';
+import AdminEntityDetailPage from './components/admin/AdminEntityDetailPage.tsx';
+import AdminContractorsPage from './components/admin/AdminContractorsPage.tsx';
+import AdminSettingsPage from './components/admin/AdminSettingsPage.tsx';
 
-import { useGeolocation } from './hooks/useGeolocation';
-import type { Entity } from './types';
-import { LanguageProvider, LanguageContext } from './contexts/LanguageContext';
+import { useGeolocation } from './hooks/useGeolocation.ts';
+import { LanguageProvider, LanguageContext } from './contexts/LanguageContext.tsx';
 
 
-const AppContent: React.FC = () => {
-  const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
+const AppContent = () => {
+  const [selectedEntity, setSelectedEntity] = useState(null);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   // Removed admin login state as authentication is being bypassed.
   const { location, error: locationError, loading: locationLoading } = useGeolocation();
@@ -37,7 +37,7 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
-  const handleSelectEntity = (entity: Entity) => {
+  const handleSelectEntity = (entity) => {
     setSelectedEntity(entity);
   };
 
@@ -55,21 +55,21 @@ const AppContent: React.FC = () => {
     const entityDetailMatch = currentPath.match(/^\/admin\/entities\/(.+)$/);
     if (entityDetailMatch) {
       const entityId = entityDetailMatch[1];
-      return <AdminEntityDetailPage entityId={entityId} />;
+      return React.createElement(AdminEntityDetailPage, { entityId: entityId });
     }
 
     switch(currentPath) {
       case '/admin/dashboard':
-        return <AdminDashboardPage />;
+        return React.createElement(AdminDashboardPage, null);
       case '/admin/entities':
-        return <AdminEntitiesPage />;
+        return React.createElement(AdminEntitiesPage, null);
       case '/admin/contractors':
-        return <AdminContractorsPage />;
+        return React.createElement(AdminContractorsPage, null);
       case '/admin/settings':
-        return <AdminSettingsPage />;
+        return React.createElement(AdminSettingsPage, null);
       default:
         // Fallback for any other /admin path
-        return <AdminDashboardPage />;
+        return React.createElement(AdminDashboardPage, null);
     }
   };
 
@@ -77,47 +77,50 @@ const AppContent: React.FC = () => {
      // Removed the login check to allow direct access to the admin panel.
      if (currentPath.startsWith('/admin')) {
         return (
-          <AdminLayout onLogout={handleAdminLogout}>
-            {renderAdminContent()}
-          </AdminLayout>
+          // Fix: Pass children as an explicit prop to satisfy TypeScript.
+          React.createElement(AdminLayout, { onLogout: handleAdminLogout, children: renderAdminContent() })
         );
      }
 
      return (
-        <>
-            <Header />
-            <main className="container mx-auto p-4 md:p-6">
-                {selectedEntity ? (
-                <DetailPage
-                    entity={selectedEntity}
-                    onBack={handleBack}
-                />
+        React.createElement(React.Fragment, null,
+            React.createElement(Header, null),
+            React.createElement("main", { className: "container mx-auto p-4 md:p-6" },
+                selectedEntity ? (
+                React.createElement(DetailPage,
+                    {
+                        entity: selectedEntity,
+                        onBack: handleBack
+                    }
+                )
                 ) : (
-                <HomePage
-                    onSelectEntity={handleSelectEntity}
-                    location={location}
-                    locationError={locationError}
-                    locationLoading={locationLoading}
-                />
-                )}
-            </main>
-        </>
+                React.createElement(HomePage,
+                    {
+                        onSelectEntity: handleSelectEntity,
+                        location: location,
+                        locationError: locationError,
+                        locationLoading: locationLoading
+                    }
+                )
+                )
+            )
+        )
      );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
-        {renderContent()}
-        <div id="map" className="hidden"></div>
-    </div>
+    React.createElement("div", { className: "min-h-screen bg-gray-50 font-sans text-gray-800" },
+        renderContent(),
+        React.createElement("div", { id: "map", className: "hidden" })
+    )
   );
 };
 
-const App: React.FC = () => {
+const App = () => {
     return (
-        <LanguageProvider>
-            <AppContent />
-        </LanguageProvider>
+        React.createElement(LanguageProvider, null,
+            React.createElement(AppContent, null)
+        )
     )
 }
 

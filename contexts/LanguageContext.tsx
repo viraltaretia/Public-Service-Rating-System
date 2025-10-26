@@ -1,32 +1,24 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { translations, getLanguage, setLanguage as saveLanguage } from '../utils/translations';
 
-interface LanguageContextType {
-  language: string;
-  setLanguage: (language: string) => void;
-  t: (key: string, replacements?: { [key: string]: string }) => string;
-}
+import React, { createContext, useState, useEffect } from 'react';
+import { translations, getLanguage, setLanguage as saveLanguage } from '../utils/translations.ts';
 
-export const LanguageContext = createContext<LanguageContextType>({
+// Fix: Corrected the type signature for the context to match the provider value.
+export const LanguageContext = createContext({
   language: 'en',
-  setLanguage: () => {},
-  t: () => '',
+  setLanguage: (language: string) => {},
+  t: (key: string, replacements?: Record<string, string | number>): string => key,
 });
 
-interface LanguageProviderProps {
-  children: ReactNode;
-}
-
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(getLanguage());
 
   useEffect(() => {
     saveLanguage(language);
   }, [language]);
 
-  const t = (key: string, replacements: { [key: string]: string } = {}) => {
+  const t = (key, replacements = {}) => {
     const langTranslations = translations[language] || translations['en'];
-    const textValue = key.split('.').reduce((obj, k) => obj && obj[k], langTranslations as any);
+    const textValue = key.split('.').reduce((obj, k) => obj && obj[k], langTranslations);
 
     // If the lookup fails or returns a non-string value (like an object),
     // return the original key to prevent crashes.
@@ -45,8 +37,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </LanguageContext.Provider>
+    React.createElement(LanguageContext.Provider, { value: { language, setLanguage, t } },
+      children
+    )
   );
 };

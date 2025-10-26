@@ -1,6 +1,8 @@
+
 // Fix: Add a global declaration for window.google to inform TypeScript that it exists,
 // as it's loaded from a script tag. This resolves errors about 'google' not
 // existing on 'window'.
+// Fix: Uncommented the global declaration for google maps.
 declare global {
     interface Window {
         google: any;
@@ -9,11 +11,10 @@ declare global {
     }
 }
 
-import type { Entity, Location, RatingSubmission, UserRating, Contractor, AdminDashboardStats, CategoryStat, TimeSeriesStat } from '../types';
-import { EntityType } from '../types';
+import { EntityType } from '../types.ts';
 
 // --- Mock Data ---
-const MOCK_ENTITIES: Entity[] = [
+const MOCK_ENTITIES = [
     { id: 'road-1', name: 'MG Road', type: EntityType.ROAD, location: { lat: 12.9716, lng: 77.5946 }, averageRating: 3.5, googleRating: 4.2, address: 'Near Commercial Street, Bengaluru', contractorId: 'CTR-101' },
     { id: 'office-1', name: 'Regional Transport Office', type: EntityType.GOVERNMENT_OFFICE, location: { lat: 12.9730, lng: 77.5900 }, averageRating: 2.1, googleRating: 2.5, address: 'Koramangala, Bengaluru', contractorId: 'N/A' },
     { id: 'park-1', name: 'Cubbon Park', type: EntityType.PARK, location: { lat: 12.9757, lng: 77.5929 }, averageRating: 4.8, googleRating: 4.6, address: 'Kasturba Road, Bengaluru', contractorId: 'CTR-205' },
@@ -25,7 +26,7 @@ const MOCK_ENTITIES: Entity[] = [
     { id: 'dump-1', name: 'Bellahalli Dump Yard', type: EntityType.DUMP_YARD, location: { lat: 13.1165, lng: 77.6198 }, averageRating: 1.5, address: 'Bellahalli, Bengaluru', contractorId: 'CTR-WASTE' },
 ];
 
-const MOCK_RATINGS: UserRating[] = [
+const MOCK_RATINGS = [
     { id: 'rating-1', entityId: 'road-1', entityName: 'MG Road', ratings: { potholes: 2, cleanliness: 3 }, comment: 'Too many potholes near the trinity circle.', photosCount: 1, submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
     { id: 'rating-2', entityId: 'office-1', entityName: 'RTO', ratings: { work_speed: 1, helpfulness: 2, corruption: 1 }, comment: 'Very slow process, had to wait for hours.', photosCount: 0, submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
     { id: 'rating-3', entityId: 'park-1', entityName: 'Cubbon Park', ratings: { cleanliness: 5, maintenance: 4 }, comment: 'Well maintained and clean, great for walks.', photosCount: 2, submittedAt: new Date().toISOString() },
@@ -36,7 +37,7 @@ const MOCK_RATINGS: UserRating[] = [
     { id: 'rating-8', entityId: 'lake-1', entityName: 'Ulsoor Lake', ratings: { water_quality: 2, odor: 2 }, comment: 'Smells bad.', photosCount: 0, submittedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString() },
 ];
 
-const MOCK_CONTRACTORS: Contractor[] = [
+const MOCK_CONTRACTORS = [
     { id: 'CTR-101', name: 'Reliable Roads Inc.', contact: 'roads-dept@example.com', assignedEntitiesCount: 2 },
     { id: 'CTR-205', name: 'GreenScape Maintainers', contact: 'parks@example.com', assignedEntitiesCount: 1 },
     { id: 'CTR-300', name: 'AquaClear Solutions', contact: 'lakes@example.com', assignedEntitiesCount: 1 },
@@ -47,7 +48,7 @@ const MOCK_CONTRACTORS: Contractor[] = [
 
 // --- Google Maps API Integration ---
 
-const GOOGLE_TYPE_TO_ENTITY_TYPE_MAP: Record<string, EntityType> = {
+const GOOGLE_TYPE_TO_ENTITY_TYPE_MAP = {
     // Prioritized types first
     'subway_station': EntityType.METRO_STATION,
     'bus_station': EntityType.BUS_STATION,
@@ -61,7 +62,7 @@ const GOOGLE_TYPE_TO_ENTITY_TYPE_MAP: Record<string, EntityType> = {
     'transit_station': EntityType.METRO_STATION,
 };
 
-const mapGoogleTypesToEntityType = (googleTypes: string[], placeName: string): EntityType => {
+const mapGoogleTypesToEntityType = (googleTypes, placeName) => {
     if (!googleTypes || googleTypes.length === 0) return EntityType.OTHER;
 
     // Check for explicit type mapping
@@ -82,10 +83,10 @@ const mapGoogleTypesToEntityType = (googleTypes: string[], placeName: string): E
 
 
 export const fetchNearbyEntities = async (
-    userLocation: Location,
-    type: EntityType | 'ALL' = 'ALL',
-    searchTerm: string = ''
-): Promise<Entity[]> => {
+    userLocation,
+    type = 'ALL',
+    searchTerm = ''
+) => {
   const useMockData = () => {
     let results = MOCK_ENTITIES;
     if (type !== 'ALL') {
@@ -106,17 +107,17 @@ export const fetchNearbyEntities = async (
     return useMockData();
   }
   
-  const processPlaces = (places: any[]): Entity[] => {
+  const processPlaces = (places) => {
       if (!places || places.length === 0) return [];
       return places
           .filter(place => place.id && place.displayName && place.location)
           .map(place => ({
-              id: place.id!,
-              name: place.displayName!,
-              type: mapGoogleTypesToEntityType(place.types || [], place.displayName!),
+              id: place.id,
+              name: place.displayName,
+              type: mapGoogleTypesToEntityType(place.types || [], place.displayName),
               location: {
-                  lat: place.location!.lat(),
-                  lng: place.location!.lng(),
+                  lat: place.location.lat(),
+                  lng: place.location.lng(),
               },
               address: place.formattedAddress || 'Address not available',
               averageRating: (Math.random() * 4 + 1), // Keep mock platform rating
@@ -127,7 +128,7 @@ export const fetchNearbyEntities = async (
 
   try {
       const { Place } = await window.google.maps.importLibrary("places");
-      let places: any[] = [];
+      let places = [];
       
       let textQuery = searchTerm.trim();
       if (type !== 'ALL') {
@@ -180,7 +181,7 @@ export const fetchNearbyEntities = async (
 
 // --- User Rating Submission ---
 
-export const submitRating = (submission: RatingSubmission): Promise<{ success: true }> => {
+export const submitRating = (submission) => {
   console.log('Submitting rating:', submission);
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -193,7 +194,8 @@ export const submitRating = (submission: RatingSubmission): Promise<{ success: t
 // --- Admin Portal Mock API ---
 
 // Fix: Add missing adminLogin function.
-export const adminLogin = (username: string, password: string): Promise<{ success: boolean }> => {
+// Fix: Add explicit return type for promise
+export const adminLogin = (username, password): Promise<{ success: boolean }> => {
     return new Promise(resolve => {
         setTimeout(() => {
             const storedPass = localStorage.getItem('adminPass') || 'password';
@@ -205,8 +207,8 @@ export const adminLogin = (username: string, password: string): Promise<{ succes
         }, 1000);
     });
 };
-
-export const changeAdminPassword = (currentPass: string, newPass: string): Promise<{success: boolean; message: string}> => {
+// Fix: Add explicit return type for promise
+export const changeAdminPassword = (currentPass, newPass): Promise<{ success: boolean; message: string; }> => {
     return new Promise((resolve) => {
         setTimeout(() => {
             const storedPass = localStorage.getItem('adminPass') || 'password';
@@ -219,8 +221,8 @@ export const changeAdminPassword = (currentPass: string, newPass: string): Promi
         }, 1000)
     });
 }
-
-export const fetchAdminDashboardStats = (): Promise<AdminDashboardStats> => {
+// Fix: Add explicit return type for promise
+export const fetchAdminDashboardStats = (): Promise<{ totalEntities: number; totalRatings: number; totalContractors: number; averageRating: number; }> => {
     return new Promise(resolve => {
         setTimeout(() => {
             const totalRatingSum = MOCK_ENTITIES.reduce((sum, entity) => sum + entity.averageRating, 0);
@@ -233,11 +235,12 @@ export const fetchAdminDashboardStats = (): Promise<AdminDashboardStats> => {
         }, 500);
     });
 };
-
-export const fetchRatingStatsByCategory = (): Promise<CategoryStat[]> => {
+// Fix: Add explicit return type for promise
+export const fetchRatingStatsByCategory = (): Promise<{ category: string; averageRating: number; ratingCount: number; }[]> => {
     return new Promise(resolve => {
         setTimeout(() => {
-            const stats: { [key in EntityType]?: { totalRating: number; count: number } } = {};
+            // Fix: Added explicit type for stats object
+            const stats: { [key: string]: { totalRating: number; count: number } } = {};
             MOCK_RATINGS.forEach(rating => {
                 const entity = MOCK_ENTITIES.find(e => e.id === rating.entityId);
                 if (entity) {
@@ -247,13 +250,13 @@ export const fetchRatingStatsByCategory = (): Promise<CategoryStat[]> => {
                     }
                     const ratingValues = Object.values(rating.ratings);
                     const avgRatingForSubmission = ratingValues.reduce((a, b) => a + b, 0) / (ratingValues.length || 1);
-                    stats[type]!.totalRating += avgRatingForSubmission;
-                    stats[type]!.count += 1;
+                    stats[type].totalRating += avgRatingForSubmission;
+                    stats[type].count += 1;
                 }
             });
 
-            const result: CategoryStat[] = Object.entries(stats).map(([category, data]) => ({
-                category: category as EntityType,
+            const result = Object.entries(stats).map(([category, data]) => ({
+                category: category,
                 averageRating: data.totalRating / (data.count || 1),
                 ratingCount: data.count,
             }));
@@ -262,32 +265,32 @@ export const fetchRatingStatsByCategory = (): Promise<CategoryStat[]> => {
         }, 800);
     });
 }
-
-export const fetchRatingsOverTime = (): Promise<TimeSeriesStat[]> => {
+// Fix: Add explicit return type for promise
+export const fetchRatingsOverTime = (): Promise<{ date: string; count: number }[]> => {
      return new Promise(resolve => {
         setTimeout(() => {
-            const dailyCounts: { [key: string]: number } = {};
+            const dailyCounts = {};
             MOCK_RATINGS.forEach(rating => {
                 const date = new Date(rating.submittedAt).toISOString().split('T')[0];
                 dailyCounts[date] = (dailyCounts[date] || 0) + 1;
             });
 
-            const result: TimeSeriesStat[] = Object.entries(dailyCounts)
-                .map(([date, count]) => ({ date, count }))
+            const result = Object.entries(dailyCounts)
+                .map(([date, count]) => ({ date, count: count as number }))
                 .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
             
             resolve(result.slice(-10)); // Return last 10 days
         }, 800);
     });
 }
-
-export const fetchAllEntities = (): Promise<Entity[]> => {
+// Fix: Add explicit return type for promise
+export const fetchAllEntities = (): Promise<any[]> => {
      return new Promise((resolve) => {
         setTimeout(() => resolve(MOCK_ENTITIES), 1000);
      });
 };
 
-export const fetchEntityWithRatings = (entityId: string): Promise<{entity: Entity | undefined; ratings: UserRating[]}> => {
+export const fetchEntityWithRatings = (entityId) => {
     return new Promise(resolve => {
         setTimeout(() => {
             const entity = MOCK_ENTITIES.find(e => e.id === entityId);
@@ -296,8 +299,8 @@ export const fetchEntityWithRatings = (entityId: string): Promise<{entity: Entit
         }, 700);
     });
 };
-
-export const fetchAllContractors = (): Promise<Contractor[]> => {
+// Fix: Add explicit return type for promise
+export const fetchAllContractors = (): Promise<any[]> => {
     return new Promise(resolve => {
         setTimeout(() => resolve(MOCK_CONTRACTORS), 1000);
     });

@@ -1,12 +1,7 @@
 
 import React from 'react';
 
-interface AlertProps {
-  type: 'success' | 'error';
-  message: string;
-}
-
-const Alert: React.FC<AlertProps> = ({ type, message }) => {
+const Alert = ({ type, message }) => {
   const baseClasses = "p-4 rounded-lg text-center font-semibold";
   const typeClasses = {
     success: "bg-green-100 text-green-800",
@@ -14,9 +9,9 @@ const Alert: React.FC<AlertProps> = ({ type, message }) => {
   };
 
   return (
-    <div className={`${baseClasses} ${typeClasses[type]}`} role="alert">
-      {message}
-    </div>
+    React.createElement("div", { className: `${baseClasses} ${typeClasses[type]}`, role: "alert" },
+      message
+    )
   );
 };
 

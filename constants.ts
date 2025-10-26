@@ -1,7 +1,6 @@
-import type { RatingParameter } from './types';
-import { EntityType } from './types';
+import { EntityType } from './types.ts';
 
-export const RATING_PARAMETERS: Record<EntityType, RatingParameter[]> = {
+export const RATING_PARAMETERS = {
   [EntityType.ROAD]: [
     { key: 'potholes', label: 'Potholes', description: 'Smoothness and absence of potholes.' },
     { key: 'footpaths', label: 'Footpaths', description: 'Condition and accessibility of sidewalks.' },

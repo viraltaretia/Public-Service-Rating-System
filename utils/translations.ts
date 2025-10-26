@@ -1,4 +1,4 @@
-const translations: { [key: string]: any } = {
+const translations = {
   en: {
     header: {
       title: 'Public Service Rater',
@@ -109,11 +109,11 @@ const translations: { [key: string]: any } = {
   },
 };
 
-const getLanguage = (): string => {
+const getLanguage = () => {
   return localStorage.getItem('language') || 'en';
 };
 
-const setLanguage = (lang: string): void => {
+const setLanguage = (lang) => {
   localStorage.setItem('language', lang);
 };
 

@@ -1,22 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import type { Location } from '../types';
 
-interface GeolocationState {
-  loading: boolean;
-  location: Location | null;
-  error: string | null;
-}
-
-export const useGeolocation = (): GeolocationState => {
-  const [state, setState] = useState<GeolocationState>({
+export const useGeolocation = () => {
+  const [state, setState] = useState({
     loading: true,
     location: null,
     error: null,
   });
 
   useEffect(() => {
-    const onSuccess = (position: GeolocationPosition) => {
+    const onSuccess = (position) => {
       setState({
         loading: false,
         location: {
@@ -27,7 +20,7 @@ export const useGeolocation = (): GeolocationState => {
       });
     };
 
-    const onError = (error: GeolocationPositionError) => {
+    const onError = (error) => {
       setState({
         loading: false,
         location: null,

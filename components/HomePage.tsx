@@ -3,6 +3,8 @@ import type { Entity, Location } from '../types';
 import { EntityType } from '../types';
 import { fetchNearbyEntities } from '../services/api';
 import EntityCard from './EntityCard';
+import EntityListItem from './EntityListItem';
+import ViewToggle from './ViewToggle';
 import Spinner from './Spinner';
 import { LanguageContext } from '../contexts/LanguageContext';
 
@@ -36,9 +38,19 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectEntity, location, locationE
   const [apiError, setApiError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<EntityType | 'ALL'>('ALL');
+  
+  const [view, setView] = useState<'grid' | 'list'>(() => {
+    const savedView = localStorage.getItem('preferredView');
+    return (savedView === 'grid' || savedView === 'list') ? savedView : 'grid';
+  });
+
   const { t } = useContext(LanguageContext);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    localStorage.setItem('preferredView', view);
+  }, [view]);
 
   useEffect(() => {
     if (location) {
@@ -93,15 +105,22 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectEntity, location, locationE
              </div>
         )
     }
+    
+    const containerClasses = view === 'grid'
+      ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      : "flex flex-col gap-4";
+
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className={containerClasses}>
         {entities.length > 0 ? (
           entities.map(entity => (
-            <EntityCard key={entity.id} entity={entity} onSelect={onSelectEntity} />
+            view === 'grid' 
+                ? <EntityCard key={entity.id} entity={entity} onSelect={onSelectEntity} />
+                : <EntityListItem key={entity.id} entity={entity} onSelect={onSelectEntity} />
           ))
         ) : (
-          <p className="md:col-span-2 lg:col-span-3 text-center text-gray-500 mt-8">{t('home.noResults')}</p>
+          <p className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 mt-8">{t('home.noResults')}</p>
         )}
       </div>
     );
@@ -113,7 +132,10 @@ const HomePage: React.FC<HomePageProps> = ({ onSelectEntity, location, locationE
   return (
     <div>
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-        <h2 className="text-2xl font-bold mb-4">{t('home.findPlaces')}</h2>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">{t('home.findPlaces')}</h2>
+            <ViewToggle currentView={view} onViewChange={setView} />
+        </div>
         <div className="flex flex-col md:flex-row gap-4">
           <input
             type="text"

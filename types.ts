@@ -49,7 +49,7 @@ export interface UserRating {
 }
 
 export interface Contractor {
-  id: string;
+  id:string;
   name: string;
   contact: string;
   assignedEntitiesCount: number;
@@ -60,4 +60,15 @@ export interface AdminDashboardStats {
     totalRatings: number;
     totalContractors: number;
     averageRating: number;
+}
+
+export interface CategoryStat {
+    category: EntityType;
+    averageRating: number;
+    ratingCount: number;
+}
+
+export interface TimeSeriesStat {
+    date: string;
+    count: number;
 }

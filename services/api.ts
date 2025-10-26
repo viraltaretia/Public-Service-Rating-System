@@ -29,7 +29,11 @@ const MOCK_RATINGS: UserRating[] = [
     { id: 'rating-1', entityId: 'road-1', entityName: 'MG Road', ratings: { potholes: 2, cleanliness: 3 }, comment: 'Too many potholes near the trinity circle.', photosCount: 1, submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
     { id: 'rating-2', entityId: 'office-1', entityName: 'RTO', ratings: { work_speed: 1, helpfulness: 2, corruption: 1 }, comment: 'Very slow process, had to wait for hours.', photosCount: 0, submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
     { id: 'rating-3', entityId: 'park-1', entityName: 'Cubbon Park', ratings: { cleanliness: 5, maintenance: 4 }, comment: 'Well maintained and clean, great for walks.', photosCount: 2, submittedAt: new Date().toISOString() },
-    { id: 'rating-4', entityId: 'road-1', entityName: 'MG Road', ratings: { potholes: 1, footpaths: 2 }, comment: 'Footpaths are broken and unusable.', photosCount: 1, submittedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 'rating-4', entityId: 'road-1', entityName: 'MG Road', ratings: { potholes: 1, footpaths: 2 }, comment: 'Footpaths are broken and unusable.', photosCount: 1, submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 'rating-5', entityId: 'metro-1', entityName: 'Indiranagar Metro', ratings: { cleanliness: 5, timeliness: 4 }, comment: 'Very clean and always on time.', photosCount: 0, submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 'rating-6', entityId: 'park-1', entityName: 'Cubbon Park', ratings: { safety: 5, greenery: 5 }, comment: 'Feels very safe even in the evening.', photosCount: 1, submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 'rating-7', entityId: 'road-2', entityName: 'Outer Ring Road', ratings: { potholes: 1, water_management: 1 }, comment: 'Horrible condition, becomes a river when it rains.', photosCount: 1, submittedAt: new Date().toISOString() },
+    { id: 'rating-8', entityId: 'lake-1', entityName: 'Ulsoor Lake', ratings: { water_quality: 2, odor: 2 }, comment: 'Smells bad.', photosCount: 0, submittedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString() },
 ];
 
 const MOCK_CONTRACTORS: Contractor[] = [
@@ -43,20 +47,37 @@ const MOCK_CONTRACTORS: Contractor[] = [
 
 // --- Google Maps API Integration ---
 
-const mapGoogleTypeToEntityType = (googleType: string): EntityType => {
-    if (googleType.includes('park')) return EntityType.PARK;
-    if (googleType.includes('bus_station')) return EntityType.BUS_STATION;
-    if (googleType.includes('subway_station') || googleType.includes('transit_station')) return EntityType.METRO_STATION;
-    if (googleType.includes('local_government_office')) return EntityType.GOVERNMENT_OFFICE;
-    return EntityType.OTHER;
+const GOOGLE_TYPE_TO_ENTITY_TYPE_MAP: Record<string, EntityType> = {
+    // Prioritized types first
+    'subway_station': EntityType.METRO_STATION,
+    'bus_station': EntityType.BUS_STATION,
+    'park': EntityType.PARK,
+    'local_government_office': EntityType.GOVERNMENT_OFFICE,
+    'city_hall': EntityType.GOVERNMENT_OFFICE,
+    'courthouse': EntityType.GOVERNMENT_OFFICE,
+    'lake': EntityType.LAKE,
+    'landfill': EntityType.DUMP_YARD,
+    // Less specific fallback
+    'transit_station': EntityType.METRO_STATION,
 };
 
-const EntityTypeToGoogleType: Partial<Record<EntityType, string[]>> = {
-    [EntityType.PARK]: ['park'],
-    [EntityType.GOVERNMENT_OFFICE]: ['local_government_office'],
-    [EntityType.METRO_STATION]: ['subway_station', 'transit_station'],
-    [EntityType.BUS_STATION]: ['bus_station'],
-    // Note: ROAD, LAKE, DUMP_YARD don't have direct mappings in Places API (New)
+const mapGoogleTypesToEntityType = (googleTypes: string[], placeName: string): EntityType => {
+    if (!googleTypes || googleTypes.length === 0) return EntityType.OTHER;
+
+    // Check for explicit type mapping
+    for (const type of googleTypes) {
+        if (GOOGLE_TYPE_TO_ENTITY_TYPE_MAP[type]) {
+            return GOOGLE_TYPE_TO_ENTITY_TYPE_MAP[type];
+        }
+    }
+    
+    // Fallback logic for names, as types can be generic (e.g., 'tourist_attraction')
+    const lowerCaseName = placeName.toLowerCase();
+    if (lowerCaseName.includes('lake')) return EntityType.LAKE;
+    if (lowerCaseName.includes('dump yard') || lowerCaseName.includes('landfill')) return EntityType.DUMP_YARD;
+    if (lowerCaseName.includes(' road')) return EntityType.ROAD; // Check for ' road' to avoid matching "broadway"
+
+    return EntityType.OTHER;
 };
 
 
@@ -92,7 +113,7 @@ export const fetchNearbyEntities = async (
           .map(place => ({
               id: place.id!,
               name: place.displayName!,
-              type: place.types && place.types.length > 0 ? mapGoogleTypeToEntityType(place.types[0]) : EntityType.OTHER,
+              type: mapGoogleTypesToEntityType(place.types || [], place.displayName!),
               location: {
                   lat: place.location!.lat(),
                   lng: place.location!.lng(),
@@ -108,31 +129,29 @@ export const fetchNearbyEntities = async (
       const { Place } = await window.google.maps.importLibrary("places");
       let places: any[] = [];
       
-      if (searchTerm.trim()) {
-          const googleType = type === 'ALL' ? undefined : (EntityTypeToGoogleType[type as EntityType] || [])[0];
-          const request: any = {
-              textQuery: searchTerm,
+      let textQuery = searchTerm.trim();
+      if (type !== 'ALL') {
+          textQuery = `${textQuery} ${type}`.trim();
+      }
+
+      if (textQuery) {
+          // Use Text Search whenever there's a search term or a filter
+          const request = {
+              textQuery: textQuery,
               fields: ['id', 'displayName', 'types', 'location', 'formattedAddress', 'rating'],
               locationBias: {
                   center: userLocation,
-                  radius: 50000,
+                  radius: 50000, // Use a wide bias for text search
               },
           };
-          if (googleType) {
-              request.includedType = googleType;
-          }
           const response = await Place.searchByText(request);
           places = response.places;
       } else {
-          const includedTypes = type === 'ALL'
-              ? ['park', 'bus_station', 'subway_station', 'transit_station', 'local_government_office', 'tourist_attraction']
-              : EntityTypeToGoogleType[type as EntityType] || [];
-
-          if (includedTypes.length === 0 && type !== 'ALL') {
-              console.warn(`Entity type "${type}" has no direct Google Places API mapping. Falling back to mock data.`);
-              return useMockData();
-          }
-
+          // Use Nearby Search ONLY when no filter and no search term is applied
+          const includedTypes = [
+              'park', 'bus_station', 'subway_station', 'transit_station', 
+              'local_government_office'
+          ];
           const request = {
               fields: ['id', 'displayName', 'types', 'location', 'formattedAddress', 'rating'],
               locationRestriction: {
@@ -149,7 +168,7 @@ export const fetchNearbyEntities = async (
       if (entities.length > 0) {
         return entities;
       } else {
-        console.warn('Google Places API search returned no results, falling back to mock data.');
+        console.warn('Google Places API search returned no results, falling back to mock data for demonstration.');
         return useMockData();
       }
 
@@ -173,21 +192,17 @@ export const submitRating = (submission: RatingSubmission): Promise<{ success: t
 
 // --- Admin Portal Mock API ---
 
-const initializeAdminCredentials = () => {
-    if (!localStorage.getItem('adminUser')) {
-        localStorage.setItem('adminUser', 'admin');
-        localStorage.setItem('adminPass', 'password');
-    }
-};
-initializeAdminCredentials();
-
-export const adminLogin = (user: string, pass: string): Promise<{success: boolean}> => {
+// Fix: Add the missing 'adminLogin' function to be consumed by the admin login page.
+export const adminLogin = (username: string, password: string): Promise<{ success: boolean }> => {
     return new Promise((resolve) => {
         setTimeout(() => {
-            const storedUser = localStorage.getItem('adminUser');
-            const storedPass = localStorage.getItem('adminPass');
-            const success = user === storedUser && pass === storedPass;
-            resolve({ success });
+            // Mock credentials. Password can be changed in settings.
+            const storedPass = localStorage.getItem('adminPass') || 'password';
+            if (username === 'admin' && password === storedPass) {
+                resolve({ success: true });
+            } else {
+                resolve({ success: false });
+            }
         }, 1000);
     });
 };
@@ -195,7 +210,7 @@ export const adminLogin = (user: string, pass: string): Promise<{success: boolea
 export const changeAdminPassword = (currentPass: string, newPass: string): Promise<{success: boolean; message: string}> => {
     return new Promise((resolve) => {
         setTimeout(() => {
-            const storedPass = localStorage.getItem('adminPass');
+            const storedPass = localStorage.getItem('adminPass') || 'password';
             if (currentPass !== storedPass) {
                 resolve({ success: false, message: 'Current password does not match.' });
                 return;
@@ -219,6 +234,55 @@ export const fetchAdminDashboardStats = (): Promise<AdminDashboardStats> => {
         }, 500);
     });
 };
+
+export type CategoryStat = { category: EntityType; averageRating: number; ratingCount: number };
+export const fetchRatingStatsByCategory = (): Promise<CategoryStat[]> => {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            const stats: { [key in EntityType]?: { totalRating: number; count: number } } = {};
+            MOCK_RATINGS.forEach(rating => {
+                const entity = MOCK_ENTITIES.find(e => e.id === rating.entityId);
+                if (entity) {
+                    const type = entity.type;
+                    if (!stats[type]) {
+                        stats[type] = { totalRating: 0, count: 0 };
+                    }
+                    const ratingValues = Object.values(rating.ratings);
+                    const avgRatingForSubmission = ratingValues.reduce((a, b) => a + b, 0) / (ratingValues.length || 1);
+                    stats[type]!.totalRating += avgRatingForSubmission;
+                    stats[type]!.count += 1;
+                }
+            });
+
+            const result: CategoryStat[] = Object.entries(stats).map(([category, data]) => ({
+                category: category as EntityType,
+                averageRating: data.totalRating / (data.count || 1),
+                ratingCount: data.count,
+            }));
+            
+            resolve(result);
+        }, 800);
+    });
+}
+
+export type TimeSeriesStat = { date: string, count: number };
+export const fetchRatingsOverTime = (): Promise<TimeSeriesStat[]> => {
+     return new Promise(resolve => {
+        setTimeout(() => {
+            const dailyCounts: { [key: string]: number } = {};
+            MOCK_RATINGS.forEach(rating => {
+                const date = new Date(rating.submittedAt).toISOString().split('T')[0];
+                dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+            });
+
+            const result: TimeSeriesStat[] = Object.entries(dailyCounts)
+                .map(([date, count]) => ({ date, count }))
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            
+            resolve(result.slice(-10)); // Return last 10 days
+        }, 800);
+    });
+}
 
 export const fetchAllEntities = (): Promise<Entity[]> => {
      return new Promise((resolve) => {

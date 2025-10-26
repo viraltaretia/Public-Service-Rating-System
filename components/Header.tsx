@@ -5,7 +5,7 @@ const Header: React.FC = () => {
     const { t, setLanguage, language } = useContext(LanguageContext);
 
     const handleAdminLoginClick = () => {
-        window.history.pushState({}, '', '/admin');
+        window.history.pushState({}, '', '/admin/dashboard');
     };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface NavLinkProps {
     href: string;
@@ -7,32 +7,13 @@ interface NavLinkProps {
 }
 
 const NavLink: React.FC<NavLinkProps> = ({ href, icon, children }) => {
-    const [isActive, setIsActive] = useState(window.location.pathname.startsWith(href));
-
-    useEffect(() => {
-        const onLocationChange = () => {
-            setIsActive(window.location.pathname.startsWith(href));
-        };
-        
-        // Custom event for pushState
-        window.addEventListener('popstate', onLocationChange);
-        const originalPushState = window.history.pushState;
-        window.history.pushState = function(...args) {
-          originalPushState.apply(window.history, args);
-          onLocationChange();
-        };
-
-        // Initial check
-        onLocationChange();
-
-        return () => {
-            window.removeEventListener('popstate', onLocationChange);
-            window.history.pushState = originalPushState;
-        };
-    }, [href]);
+    // The active state is now determined on each render.
+    // App.tsx's state update on path change will trigger a re-render here.
+    const isActive = window.location.pathname.startsWith(href);
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
+        // The hijacked pushState in App.tsx will handle the state update.
         window.history.pushState({}, '', href);
     };
 

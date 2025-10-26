@@ -2,13 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import Header from './components/Header';
 import HomePage from './components/HomePage';
 import DetailPage from './components/DetailPage';
-import AdminLoginPage from './components/admin/AdminLoginPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboardPage from './components/admin/AdminDashboardPage';
 import AdminEntitiesPage from './components/admin/AdminEntitiesPage';
 import AdminEntityDetailPage from './components/admin/AdminEntityDetailPage';
 import AdminContractorsPage from './components/admin/AdminContractorsPage';
 import AdminSettingsPage from './components/admin/AdminSettingsPage';
+// Fix: Import the AdminLoginPage to use in the authentication flow.
+import AdminLoginPage from './components/admin/AdminLoginPage';
 
 import { useGeolocation } from './hooks/useGeolocation';
 import type { Entity } from './types';
@@ -17,8 +18,9 @@ import { LanguageProvider, LanguageContext } from './contexts/LanguageContext';
 
 const AppContent: React.FC = () => {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  // Fix: Add state to manage admin login status, persisted in session storage.
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(sessionStorage.getItem('isAdminLoggedIn') === 'true');
   const { location, error: locationError, loading: locationLoading } = useGeolocation();
   const { t } = useContext(LanguageContext);
 
@@ -26,17 +28,6 @@ const AppContent: React.FC = () => {
     const onLocationChange = () => {
       setCurrentPath(window.location.pathname);
     };
-
-    const checkAuth = () => {
-      const loggedIn = sessionStorage.getItem('isAdminAuthenticated') === 'true';
-      setIsAdminAuthenticated(loggedIn);
-      // Redirect from /admin or /admin/ to dashboard if logged in
-      if (loggedIn && (window.location.pathname === '/admin' || window.location.pathname === '/admin/')) {
-        window.history.replaceState({}, '', '/admin/dashboard');
-        onLocationChange();
-      }
-    };
-    checkAuth();
 
     // Listen to browser navigation events
     window.addEventListener('popstate', onLocationChange);
@@ -62,18 +53,12 @@ const AppContent: React.FC = () => {
     setSelectedEntity(null);
   };
 
-  const handleAdminLogin = () => {
-    sessionStorage.setItem('isAdminAuthenticated', 'true');
-    setIsAdminAuthenticated(true);
-    window.history.pushState({}, '', '/admin/dashboard');
-    setCurrentPath('/admin/dashboard');
-  };
-
+  // Fix: Update logout handler to clear authentication state.
   const handleAdminLogout = () => {
-    sessionStorage.removeItem('isAdminAuthenticated');
-    setIsAdminAuthenticated(false);
-    window.history.pushState({}, '', '/admin');
-    setCurrentPath('/admin');
+    setIsAdminLoggedIn(false);
+    sessionStorage.removeItem('isAdminLoggedIn');
+    window.history.pushState({}, '', '/');
+    setCurrentPath('/');
   };
   
   const renderAdminContent = () => {
@@ -99,9 +84,13 @@ const AppContent: React.FC = () => {
   };
 
   const renderContent = () => {
+     // Fix: Protect the admin route with a login check.
      if (currentPath.startsWith('/admin')) {
-        if (!isAdminAuthenticated) {
-            return <AdminLoginPage onLoginSuccess={handleAdminLogin} />;
+        if (!isAdminLoggedIn) {
+          return <AdminLoginPage onLoginSuccess={() => {
+            setIsAdminLoggedIn(true);
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+          }} />;
         }
         return (
           <AdminLayout onLogout={handleAdminLogout}>

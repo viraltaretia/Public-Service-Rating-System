@@ -40,16 +40,15 @@ const translations: { [key: string]: any } = {
     },
     loginModal: {
       title: 'Verify Submission',
-      subtitle: 'A quick verification is required to submit your rating.',
-      phoneLabel: 'Mobile Number',
-      phonePlaceholder: 'Enter 10-digit number',
-      sendOtpButton: 'Send OTP',
-      otpSentMessage: 'An OTP has been sent to +91 {phoneNumber}. (Hint: Use 123456)',
+      subtitle: 'To prevent spam, please get an OTP via WhatsApp.',
+      whatsappInstruction: 'Click the button below to open WhatsApp and send a pre-filled message to get your OTP.',
+      whatsappButton: 'Get OTP via WhatsApp',
+      proceedButton: "I've sent the message, Next",
+      otpSentMessage: "Enter the OTP you received via WhatsApp. (Hint: Use 123456)",
       otpLabel: 'Enter OTP',
       otpPlaceholder: '6-digit code',
       verifyButton: 'Verify & Submit Rating',
       error: {
-          invalidPhone: 'Please enter a valid 10-digit phone number.',
           invalidOtp: 'Invalid OTP. Please try again.',
       }
     },
@@ -95,16 +94,15 @@ const translations: { [key: string]: any } = {
     },
     loginModal: {
       title: 'सबमिशन सत्यापित करें',
-      subtitle: 'आपकी रेटिंग सबमिट करने के लिए एक त्वरित सत्यापन आवश्यक है।',
-      phoneLabel: 'मोबाइल नंबर',
-      phonePlaceholder: '10 अंकों का नंबर दर्ज करें',
-      sendOtpButton: 'ओटीपी भेजें',
-      otpSentMessage: 'एक ओटीपी +91 {phoneNumber} पर भेजा गया है। (संकेत: 123456 का प्रयोग करें)',
+      subtitle: 'स्पैम को रोकने के लिए, कृपया व्हाट्सएप के माध्यम से एक ओटीपी प्राप्त करें।',
+      whatsappInstruction: 'अपना ओटीपी प्राप्त करने के लिए व्हाट्सएप खोलने और एक पूर्व-भरे हुए संदेश भेजने के लिए नीचे दिए गए बटन पर क्लिक करें।',
+      whatsappButton: 'व्हाट्सएप पर ओटीपी प्राप्त करें',
+      proceedButton: 'मैंने संदेश भेज दिया है, अगला',
+      otpSentMessage: "व्हाट्सएप के माध्यम से प्राप्त ओटीपी दर्ज करें। (संकेत: 123456 का प्रयोग करें)",
       otpLabel: 'ओटीपी दर्ज करें',
       otpPlaceholder: '6-अंकीय कोड',
       verifyButton: 'सत्यापित करें और रेटिंग सबमिट करें',
       error: {
-        invalidPhone: 'कृपया एक मान्य 10-अंकीय फ़ोन नंबर दर्ज करें।',
         invalidOtp: 'अमान्य ओटीपी। कृपया पुन: प्रयास करें।',
       }
     },

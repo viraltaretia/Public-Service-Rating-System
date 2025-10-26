@@ -53,6 +53,9 @@ const AdminDashboardPage: React.FC = () => {
   if (error) {
     return <div className="p-4 text-center text-red-600 bg-red-50 rounded-lg">{error}</div>;
   }
+  
+  const maxTimeSeriesCount = timeSeriesStats.length > 0 ? Math.max(...timeSeriesStats.map(s => s.count)) : 0;
+  const timeSeriesDenominator = maxTimeSeriesCount > 0 ? maxTimeSeriesCount : 1;
 
   return (
     <div>
@@ -113,7 +116,7 @@ const AdminDashboardPage: React.FC = () => {
                             <span className="text-sm font-bold text-gray-700">{stat.count}</span>
                             <div 
                                 className="w-full bg-blue-400 rounded-t-md"
-                                style={{ height: `${(stat.count / (Math.max(...timeSeriesStats.map(s => s.count)) || 1)) * 100}%`}}
+                                style={{ height: `${(stat.count / timeSeriesDenominator) * 100}%`}}
                                 title={`${stat.count} ratings on ${new Date(stat.date).toLocaleDateString()}`}
                             ></div>
                             <span className="text-xs text-gray-500 mt-1">{new Date(stat.date).getDate()}</span>

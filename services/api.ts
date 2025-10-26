@@ -9,7 +9,7 @@ declare global {
     }
 }
 
-import type { Entity, Location, RatingSubmission, UserRating, Contractor, AdminDashboardStats } from '../types';
+import type { Entity, Location, RatingSubmission, UserRating, Contractor, AdminDashboardStats, CategoryStat, TimeSeriesStat } from '../types';
 import { EntityType } from '../types';
 
 // --- Mock Data ---
@@ -234,7 +234,6 @@ export const fetchAdminDashboardStats = (): Promise<AdminDashboardStats> => {
     });
 };
 
-export type CategoryStat = { category: EntityType; averageRating: number; ratingCount: number };
 export const fetchRatingStatsByCategory = (): Promise<CategoryStat[]> => {
     return new Promise(resolve => {
         setTimeout(() => {
@@ -264,7 +263,6 @@ export const fetchRatingStatsByCategory = (): Promise<CategoryStat[]> => {
     });
 }
 
-export type TimeSeriesStat = { date: string, count: number };
 export const fetchRatingsOverTime = (): Promise<TimeSeriesStat[]> => {
      return new Promise(resolve => {
         setTimeout(() => {

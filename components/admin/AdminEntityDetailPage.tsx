@@ -35,6 +35,7 @@ const AdminEntityDetailPage: React.FC<AdminEntityDetailPageProps> = ({ entityId 
     
     const handleBack = () => {
         window.history.pushState({}, '', '/admin/entities');
+        window.dispatchEvent(new Event('pathchange'));
     }
 
     if (loading) {

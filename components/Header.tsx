@@ -6,6 +6,7 @@ const Header: React.FC = () => {
 
     const handleAdminLoginClick = () => {
         window.history.pushState({}, '', '/admin/dashboard');
+        window.dispatchEvent(new Event('pathchange'));
     };
 
   return (

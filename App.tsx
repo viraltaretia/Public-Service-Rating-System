@@ -26,19 +26,14 @@ const AppContent: React.FC = () => {
       setCurrentPath(window.location.pathname);
     };
 
-    // Listen to browser navigation events
+    // Listen to browser back/forward navigation
     window.addEventListener('popstate', onLocationChange);
-
-    // Hijack pushState to listen to programmatic navigation
-    const originalPushState = window.history.pushState;
-    window.history.pushState = function(...args) {
-      originalPushState.apply(window.history, args);
-      onLocationChange();
-    };
+    // Listen to our custom event for programmatic navigation
+    window.addEventListener('pathchange', onLocationChange);
 
     return () => {
       window.removeEventListener('popstate', onLocationChange);
-      window.history.pushState = originalPushState;
+      window.removeEventListener('pathchange', onLocationChange);
     };
   }, []);
 
@@ -53,7 +48,7 @@ const AppContent: React.FC = () => {
   // The logout handler now simply navigates back to the homepage.
   const handleAdminLogout = () => {
     window.history.pushState({}, '', '/');
-    setCurrentPath('/');
+    window.dispatchEvent(new Event('pathchange'));
   };
   
   const renderAdminContent = () => {

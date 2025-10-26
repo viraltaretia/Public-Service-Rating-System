@@ -34,6 +34,7 @@ const AdminEntitiesPage: React.FC = () => {
 
   const handleRowClick = (entityId: string) => {
     window.history.pushState({}, '', `/admin/entities/${entityId}`);
+    window.dispatchEvent(new Event('pathchange'));
   };
 
   const renderContent = () => {
